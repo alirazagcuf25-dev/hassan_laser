@@ -1,8 +1,10 @@
 name: Deploy to Hostinger
+
 on:
   push:
     branches:
       - main
+
 jobs:
   web-deploy:
     name: Deploy
@@ -17,4 +19,7 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        server-dir: ./public_html/www/
+        # Hostinger par path hamesha / se shuru hona chahiye
+        server-dir: /public_html/www/
+        # Is se purani extra files delete nahi hongi, sirf nayi update hongi
+        dangerous-clean-slate: false
