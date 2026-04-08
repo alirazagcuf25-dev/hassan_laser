@@ -13,45 +13,40 @@ jobs:
   web-deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
     steps:
     - name: Get latest code
       uses: actions/checkout@v4
 
-    - name: Sync files to /www/
-      continue-on-error: true
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-      with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        protocol: ftp
-        port: 21
-        timeout: 120000
-        # Candidate path 1
-        server-dir: /www/
-        dangerous-clean-slate: false
-        exclude: |
-          **/.git*
-          **/.github/**
-          **/run-logs/**
+    - name: Install lftp
+      run: sudo apt-get update && sudo apt-get install -y lftp
 
-    - name: Sync files to /public_html/www/
-      continue-on-error: true
-      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-      with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        protocol: ftp
-        port: 21
-        timeout: 120000
-        # Candidate path 2
-        server-dir: /public_html/www/
-        dangerous-clean-slate: false
-        exclude: |
-          **/.git*
-          **/.github/**
-          **/run-logs/**
+    - name: Sync files with lftp mirror
+      run: |
+        set -e
+        TARGETS="/www /public_html/www"
+        DEPLOYED=0
+
+        for TARGET in $TARGETS; do
+          echo "Trying deploy target: $TARGET"
+
+          lftp -e "set ssl:verify-certificate no; set ftp:passive-mode true; set net:timeout 20; set net:max-retries 2; set cmd:fail-exit false; open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER; rm -f $TARGET/config; rm -f $TARGET/api; rm -f $TARGET/app; rm -f $TARGET/public; mkdir -p $TARGET; mirror -R --delete --verbose --exclude-glob .git* --exclude-glob .github --exclude-glob run-logs* ./ $TARGET; bye"
+
+          if curl -fsSL --max-time 20 "https://iceflowraza.com/www/public/index.php?ts=$(date +%s)" | grep -q "confirm_password"; then
+            echo "Deploy verified on live URL using target: $TARGET"
+            DEPLOYED=1
+            break
+          fi
+        done
+
+        if [ "$DEPLOYED" -ne 1 ]; then
+          echo "Deploy completed on FTP but live URL still not showing latest marker."
+          echo "Check Hostinger domain document root mapping for /www/public/index.php"
+          exit 1
+        fi
 
     - name: Verify live page has latest code
       run: |
