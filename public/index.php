@@ -8,7 +8,7 @@ $user = current_user();
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hassan Trade Panel</title>
-  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="/public/assets/css/style.css">
 </head>
 <body class="<?php echo $user ? 'logged-in' : 'logged-out'; ?>">
   <?php if (!$user): ?>
@@ -132,6 +132,6 @@ $user = current_user();
   <script>
     window.CURRENT_USER = <?php echo json_encode($user ?: null, JSON_UNESCAPED_UNICODE); ?>;
   </script>
-  <script src="assets/js/app.js"></script>
+  <script src="/public/assets/js/app.js"></script>
 </body>
 </html>

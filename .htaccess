@@ -2,7 +2,5 @@ Options -Indexes
 
 <IfModule mod_rewrite.c>
 RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_FILENAME} !-d
-RewriteRule ^public/(.*)$ public/$1 [L]
+RewriteRule ^$ public/index.php [L]
 </IfModule>
