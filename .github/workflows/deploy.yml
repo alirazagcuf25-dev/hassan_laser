@@ -22,24 +22,37 @@ jobs:
 
     - name: Deploy and verify live marker
       run: |
-        set -e
+        set -euo pipefail
         TARGETS="/www/ /public_html/www/ ./www/"
+        URLS="https://iceflowraza.com/www/deploy-test.txt https://iceflowraza.com/deploy-test.txt"
+        MARKER="gha-${GITHUB_SHA:0:7}-$(date +%s)"
         VERIFIED=0
+
+        echo "DEPLOY_TEST_MARKER=$MARKER" > deploy-test.txt
+        echo "Generated marker: $MARKER"
 
         for TARGET in $TARGETS; do
           echo "Deploy attempt target: $TARGET"
-          lftp -e "set ssl:verify-certificate no; set ftp:passive-mode true; open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER; mirror -R --delete --verbose --exclude-glob .git* --exclude-glob .github --exclude-glob run-logs* ./ $TARGET; bye" || true
+          lftp -e "set ssl:verify-certificate no; set ftp:passive-mode true; open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER; mirror -R --verbose --exclude-glob .git* --exclude-glob .github --exclude-glob run-logs* ./ $TARGET; bye" || true
 
-          echo "Verifying live marker after target: $TARGET"
-          if curl -fsSL "https://iceflowraza.com/www/deploy-test.txt?ts=$(date +%s)" | grep -q "DEPLOY_TEST_MARKER=2026-04-08-verify-01"; then
-            echo "Live marker found. Correct target appears to be: $TARGET"
-            VERIFIED=1
+          for URL in $URLS; do
+            echo "Checking URL: $URL"
+            if curl -fsSL "$URL?ts=$(date +%s)" | grep -q "DEPLOY_TEST_MARKER=$MARKER"; then
+              echo "Marker matched on URL: $URL"
+              echo "Remote target likely active: $TARGET" >> "$GITHUB_STEP_SUMMARY"
+              echo "Live URL showing updates: $URL" >> "$GITHUB_STEP_SUMMARY"
+              VERIFIED=1
+              break
+            fi
+          done
+
+          if [ "$VERIFIED" -eq 1 ]; then
             break
           fi
         done
 
         if [ "$VERIFIED" -ne 1 ]; then
-          echo "Live marker not found on https://iceflowraza.com/www/deploy-test.txt"
-          echo "Please verify FTP secrets point to the same Hostinger account/domain."
+          echo "Marker not visible on tested live URLs."
+          echo "Likely FTP secrets are pointing to another Hostinger account/server."
           exit 1
         fi
