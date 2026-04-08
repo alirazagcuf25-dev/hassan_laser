@@ -7,7 +7,7 @@ $user = current_user();
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Saddique ERP Panel</title>
+  <title>Hassan Trade Panel</title>
   <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body class="<?php echo $user ? 'logged-in' : 'logged-out'; ?>">
@@ -73,7 +73,7 @@ $user = current_user();
   <div class="bg-grid"></div>
   <main class="shell">
     <header class="hero">
-      <h1>Saddique ERP</h1>
+      <h1>Hassan Trade</h1>
       <p>Orders, Inventory, Vouchers, Recovery, Customer Tracking</p>
       <div class="session">
         <span>Logged in: <?php echo htmlspecialchars($user['full_name']); ?> (<?php echo htmlspecialchars($user['role']); ?>)</span>
