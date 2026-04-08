@@ -5,6 +5,10 @@ on:
     branches:
       - main
 
+concurrency:
+  group: hostinger-deploy
+  cancel-in-progress: true
+
 jobs:
   web-deploy:
     name: Deploy
@@ -19,6 +23,7 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
+        protocol: ftp
         port: 21
         timeout: 120000
         # IMPORTANT: Many Hostinger FTP users are already jailed inside /public_html/www.
@@ -29,3 +34,8 @@ jobs:
           **/.git*
           **/.github/**
           **/run-logs/**
+
+    - name: Verify live deploy marker
+      run: |
+        set -e
+        curl -fsSL --max-time 20 "https://iceflowraza.com/www/deploy-test.txt?ts=$(date +%s)" | grep -q "DEPLOY_TEST_MARKER="
