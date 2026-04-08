@@ -21,7 +21,7 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         port: 21
         timeout: 60000 # Time badha diya taake timeout na ho
-        # Hostinger production path
-        server-dir: /public_html/www/
+        # Hostinger FTP account root is often already /public_html
+        server-dir: /www/
         # Purani stale files (jaise old index.html) hata kar fresh deploy karein
         dangerous-clean-slate: true

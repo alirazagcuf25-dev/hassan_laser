@@ -9,7 +9,7 @@ return [
         'host' => '127.0.0.1',
         'port' => '3306',
         'name' => 'saddique_erp',
-        'user' => 'root',
+        'user' => 'u321836134_root',
         'password' => 'Hassan258@12'
     ]
 ];
