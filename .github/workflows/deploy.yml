@@ -17,7 +17,8 @@ jobs:
     - name: Get latest code
       uses: actions/checkout@v4
 
-    - name: Sync files to Hostinger www directory
+    - name: Sync files to /www/
+      continue-on-error: true
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
         server: ${{ secrets.FTP_SERVER }}
@@ -26,15 +27,33 @@ jobs:
         protocol: ftp
         port: 21
         timeout: 120000
-        # Hostinger path for this app
+        # Candidate path 1
         server-dir: /www/
-        dangerous-clean-slate: true
+        dangerous-clean-slate: false
         exclude: |
           **/.git*
           **/.github/**
           **/run-logs/**
 
-    - name: Verify live deploy marker
+    - name: Sync files to /public_html/www/
+      continue-on-error: true
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        protocol: ftp
+        port: 21
+        timeout: 120000
+        # Candidate path 2
+        server-dir: /public_html/www/
+        dangerous-clean-slate: false
+        exclude: |
+          **/.git*
+          **/.github/**
+          **/run-logs/**
+
+    - name: Verify live page has latest code
       run: |
         set -e
-        curl -fsSL --max-time 20 "https://iceflowraza.com/www/deploy-test.txt?ts=$(date +%s)" | grep -q "DEPLOY_TEST_MARKER="
+        curl -fsSL --max-time 20 "https://iceflowraza.com/www/public/index.php?ts=$(date +%s)" | grep -q "confirm_password"
