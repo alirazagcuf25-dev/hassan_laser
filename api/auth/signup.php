@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../../app/bootstrap.php';
 
 $input = request_json();
-$missing = require_fields($input, ['username', 'password']);
+$missing = require_fields($input, ['username', 'phone', 'password']);
 if ($missing) {
     json_response(['ok' => false, 'message' => 'Missing field: ' . $missing], 422);
 }
@@ -17,7 +17,11 @@ if (strlen((string)$input['password']) < 6) {
     json_response(['ok' => false, 'message' => 'Password must be at least 6 characters'], 422);
 }
 
-$phone = !empty($input['phone']) ? trim((string)$input['phone']) : null;
+$phone = trim((string)$input['phone']);
+if ($phone === '') {
+    json_response(['ok' => false, 'message' => 'Phone is required'], 422);
+}
+
 $email = !empty($input['email']) ? trim((string)$input['email']) : null;
 
 $pdo = db();
@@ -27,12 +31,10 @@ if ($exists->fetch()) {
     json_response(['ok' => false, 'message' => 'Username already exists'], 409);
 }
 
-if ($phone !== null) {
-    $phoneExists = $pdo->prepare('SELECT id FROM users WHERE phone = ? LIMIT 1');
-    $phoneExists->execute([$phone]);
-    if ($phoneExists->fetch()) {
-        json_response(['ok' => false, 'message' => 'Phone already exists'], 409);
-    }
+$phoneExists = $pdo->prepare('SELECT id FROM users WHERE phone = ? LIMIT 1');
+$phoneExists->execute([$phone]);
+if ($phoneExists->fetch()) {
+    json_response(['ok' => false, 'message' => 'Phone already exists'], 409);
 }
 
 if ($email !== null) {

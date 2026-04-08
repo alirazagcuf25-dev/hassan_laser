@@ -40,7 +40,7 @@ $user = current_user();
         <div class="tab-pane" id="pane-signup">
           <form id="signupForm">
             <input type="text" name="username" placeholder="Choose User Name" required>
-            <input type="text" name="phone" placeholder="Phone (optional)">
+            <input type="text" name="phone" placeholder="Phone" required>
             <input type="email" name="email" placeholder="Email (optional)">
             <div class="password-wrap">
               <input type="password" name="password" placeholder="Password" required>
