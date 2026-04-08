@@ -44,17 +44,9 @@ body.logged-out {
 .auth-brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   color: #fff;
   margin-bottom: 12px;
-}
-
-.brand-mark {
-  font-size: 48px;
-  font-weight: 900;
-  line-height: 1;
-  color: #fff;
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.35);
 }
 
 .auth-brand h1 {
@@ -79,6 +71,69 @@ body.logged-out {
 .auth-panel input {
   border: 1px dashed #999;
   background: #fff;
+}
+
+.auth-message {
+  display: none;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.auth-message.success,
+.auth-message.error {
+  display: block;
+}
+
+.auth-message.success {
+  background: #e6f8ee;
+  color: #16653a;
+  border: 1px solid #b9e7ca;
+}
+
+.auth-message.error {
+  background: #ffecec;
+  color: #8e1f1f;
+  border: 1px solid #f3bbbb;
+}
+
+.password-wrap {
+  position: relative;
+}
+
+.password-wrap input {
+  padding-right: 44px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  width: 30px;
+  height: 30px;
+  transform: translateY(-50%);
+  border: 1px solid #c9ced5;
+  border-radius: 7px;
+  background: #f7f9fc;
+  color: #49505a;
+  display: grid;
+  place-items: center;
+  font-size: 15px;
+  line-height: 1;
+  padding: 0;
+}
+
+.password-toggle:hover {
+  filter: none;
+  background: #e9eff7;
+}
+
+.password-toggle.is-visible {
+  background: #dcecff;
+  color: #174a8c;
+  border-color: #a7c6eb;
 }
 
 .primary-btn {
@@ -106,11 +161,6 @@ body.logged-out {
 .switch-link.active {
   color: #1d1d1d;
   text-decoration: underline;
-}
-
-.output-card {
-  width: 100%;
-  max-width: 520px;
 }
 
 .bg-grid {

@@ -15,21 +15,24 @@ $user = current_user();
   <main class="auth-shell">
     <section class="auth-box" id="authCard">
       <div class="auth-brand">
-        <div class="brand-mark">LB</div>
         <div>
-          <h1>Ledger Book</h1>
-          <p>Saddique ERP Access Panel</p>
+          <h1>Hassan Trade</h1>
+          <p>ERP Access Panel</p>
         </div>
       </div>
 
       <div class="auth-panel">
         <h2 id="authTitle">Sign In</h2>
         <p id="authSub">Use your username and password to continue.</p>
+        <div id="authMessage" class="auth-message" aria-live="polite"></div>
 
         <div class="tab-pane active" id="pane-signin">
           <form id="loginForm">
             <input type="text" name="username" placeholder="User Name" required>
-            <input type="password" name="password" placeholder="Password" required>
+            <div class="password-wrap">
+              <input type="password" name="password" placeholder="Password" required>
+              <button type="button" class="password-toggle" data-target="password" aria-label="Show password" title="Show password">&#128065;</button>
+            </div>
             <button type="submit" class="primary-btn">Login</button>
           </form>
         </div>
@@ -39,7 +42,10 @@ $user = current_user();
             <input type="text" name="username" placeholder="Choose User Name" required>
             <input type="text" name="phone" placeholder="Phone (optional)">
             <input type="email" name="email" placeholder="Email (optional)">
-            <input type="password" name="password" placeholder="Password" required>
+            <div class="password-wrap">
+              <input type="password" name="password" placeholder="Password" required>
+              <button type="button" class="password-toggle" data-target="password" aria-label="Show password" title="Show password">&#128065;</button>
+            </div>
             <button type="submit" class="primary-btn">Create Account</button>
           </form>
         </div>
@@ -47,7 +53,10 @@ $user = current_user();
         <div class="tab-pane" id="pane-forgot">
           <form id="forgotForm">
             <input type="text" name="username" placeholder="User Name" required>
-            <input type="password" name="new_password" placeholder="New Password" required>
+            <div class="password-wrap">
+              <input type="password" name="new_password" placeholder="New Password" required>
+              <button type="button" class="password-toggle" data-target="new_password" aria-label="Show password" title="Show password">&#128065;</button>
+            </div>
             <button type="submit" class="primary-btn">Reset Password</button>
           </form>
         </div>
@@ -58,11 +67,6 @@ $user = current_user();
           <button type="button" class="switch-link" data-tab="forgot">Forgot Password?</button>
         </div>
       </div>
-    </section>
-
-    <section class="card output-card">
-      <h2>Live Output</h2>
-      <pre id="output">System ready.</pre>
     </section>
   </main>
   <?php else: ?>
@@ -121,11 +125,6 @@ $user = current_user();
           </form>
         </div>
       </section>
-    </section>
-
-    <section class="card">
-      <h2>Live Output</h2>
-      <pre id="output">System ready.</pre>
     </section>
   </main>
   <?php endif; ?>

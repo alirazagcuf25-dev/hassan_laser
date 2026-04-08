@@ -4,14 +4,36 @@ async function postJson(url, payload) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload)
   });
-  return res.json();
+
+  const contentType = (res.headers.get('content-type') || '').toLowerCase();
+  if (contentType.includes('application/json')) {
+    return res.json();
+  }
+
+  const text = await res.text();
+  return {
+    ok: false,
+    message: text ? 'Unexpected server response: ' + text.slice(0, 180) : 'Unexpected server response'
+  };
 }
 
-function show(data) {
-  const out = document.getElementById('output');
-  if (out) {
-    out.textContent = JSON.stringify(data, null, 2);
+function show(data, typeHint) {
+  const messageBox = document.getElementById('authMessage');
+  if (messageBox) {
+    const isOk = typeof typeHint === 'string' ? typeHint === 'success' : !!(data && data.ok);
+    messageBox.classList.remove('success', 'error');
+    messageBox.classList.add(isOk ? 'success' : 'error');
+    messageBox.textContent = (data && data.message) ? data.message : JSON.stringify(data || {}, null, 2);
   }
+}
+
+function clearMessage() {
+  const messageBox = document.getElementById('authMessage');
+  if (!messageBox) {
+    return;
+  }
+  messageBox.classList.remove('success', 'error');
+  messageBox.textContent = '';
 }
 
 function setLoggedInUI(user) {
@@ -68,6 +90,34 @@ function setupAuthTabs() {
       document.getElementById('pane-' + tab).classList.add('active');
       title.textContent = tabMeta[tab].title;
       sub.textContent = tabMeta[tab].sub;
+      clearMessage();
+    });
+  });
+}
+
+function setupPasswordToggles() {
+  const toggles = document.querySelectorAll('.password-toggle');
+  if (!toggles.length) {
+    return;
+  }
+
+  toggles.forEach((toggle) => {
+    toggle.addEventListener('click', () => {
+      const wrap = toggle.closest('.password-wrap');
+      if (!wrap) {
+        return;
+      }
+
+      const input = wrap.querySelector('input[type="password"], input[type="text"]');
+      if (!input) {
+        return;
+      }
+
+      const showing = input.type === 'text';
+      input.type = showing ? 'password' : 'text';
+      toggle.classList.toggle('is-visible', !showing);
+      toggle.setAttribute('aria-label', showing ? 'Show password' : 'Hide password');
+      toggle.setAttribute('title', showing ? 'Show password' : 'Hide password');
     });
   });
 }
@@ -100,21 +150,27 @@ function renderCustomerResults(rows) {
 }
 
 setupAuthTabs();
+setupPasswordToggles();
 setLoggedInUI(window.CURRENT_USER || null);
 
 const loginForm = document.getElementById('loginForm');
 if (loginForm) {
   loginForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    clearMessage();
     const form = new FormData(e.target);
-    const data = await postJson('../api/auth/login.php', {
-      username: form.get('username'),
-      password: form.get('password')
-    });
-    show(data);
+    try {
+      const data = await postJson('../api/auth/login.php', {
+        username: form.get('username'),
+        password: form.get('password')
+      });
+      show(data);
 
-    if (data.ok) {
-      window.location.reload();
+      if (data.ok) {
+        window.location.reload();
+      }
+    } catch (err) {
+      show({ ok: false, message: 'Login failed. Please try again.' });
     }
   });
 }
@@ -123,14 +179,28 @@ const signupForm = document.getElementById('signupForm');
 if (signupForm) {
   signupForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    clearMessage();
     const form = new FormData(e.target);
-    const data = await postJson('../api/auth/signup.php', {
-      username: form.get('username'),
-      phone: form.get('phone'),
-      email: form.get('email'),
-      password: form.get('password')
-    });
-    show(data);
+    try {
+      const data = await postJson('../api/auth/signup.php', {
+        username: form.get('username'),
+        phone: form.get('phone'),
+        email: form.get('email'),
+        password: form.get('password')
+      });
+      show(data);
+
+      if (data.ok) {
+        e.target.reset();
+        const signInBtn = document.querySelector('.switch-link[data-tab="signin"]');
+        if (signInBtn) {
+          signInBtn.click();
+          show({ ok: true, message: 'Account created. Please sign in.' }, 'success');
+        }
+      }
+    } catch (err) {
+      show({ ok: false, message: 'Signup failed. Please try again.' });
+    }
   });
 }
 
@@ -138,12 +208,17 @@ const forgotForm = document.getElementById('forgotForm');
 if (forgotForm) {
   forgotForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    clearMessage();
     const form = new FormData(e.target);
-    const data = await postJson('../api/auth/forgot_password.php', {
-      username: form.get('username'),
-      new_password: form.get('new_password')
-    });
-    show(data);
+    try {
+      const data = await postJson('../api/auth/forgot_password.php', {
+        username: form.get('username'),
+        new_password: form.get('new_password')
+      });
+      show(data);
+    } catch (err) {
+      show({ ok: false, message: 'Password reset failed. Please try again.' });
+    }
   });
 }
 
