@@ -23,11 +23,14 @@ jobs:
         port: 21
         security: loose
         server-dir: ./public_html/www/
+        state-name: .ftp-deploy-sync-state-www-v2.json
         timeout: 900000
-        passive: true
         log-level: verbose
         exclude: |
+          **/.git
+          **/.git/**
           **/.git*
+          **/.git*/**
           **/.github/**
           **/node_modules/**
           **/vendor/**
