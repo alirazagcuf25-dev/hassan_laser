@@ -9,9 +9,20 @@ jobs:
   web-deploy:
     name: Deploy
     runs-on: ubuntu-latest
+    env:
+      FTP_SERVER: ${{ secrets.FTP_SERVER }}
+      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
+      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
     steps:
     - name: Get latest code
       uses: actions/checkout@v4
+
+    - name: Install FTP diagnostic tool
+      run: sudo apt-get update && sudo apt-get install -y lftp
+
+    - name: Pre-deploy remote directory check
+      run: |
+        lftp -e "set ssl:verify-certificate no; open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER; pwd; ls -la; cd /public_html; ls -la; cd /public_html/www; ls -la; bye"
     
     - name: Sync files
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
@@ -21,7 +32,13 @@ jobs:
         password: ${{ secrets.FTP_PASSWORD }}
         port: 21
         timeout: 60000 # Time badha diya taake timeout na ho
-        # Hostinger FTP account root is often already /public_html
-        server-dir: /www/
+        # Hostinger production path
+        server-dir: /public_html/www/
         # Purani stale files (jaise old index.html) hata kar fresh deploy karein
         dangerous-clean-slate: true
+
+    - name: Post-deploy verify test marker
+      run: |
+        LISTING=$(lftp -e "set ssl:verify-certificate no; open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER; cd /public_html/www; cls -1; bye")
+        echo "$LISTING"
+        echo "$LISTING" | grep -x "deploy-test.txt"
