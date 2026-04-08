@@ -9,50 +9,23 @@ jobs:
   web-deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    env:
-      FTP_SERVER: ${{ secrets.FTP_SERVER }}
-      FTP_USERNAME: ${{ secrets.FTP_USERNAME }}
-      FTP_PASSWORD: ${{ secrets.FTP_PASSWORD }}
     steps:
     - name: Get latest code
       uses: actions/checkout@v4
 
-    - name: Install FTP diagnostic tool
-      run: sudo apt-get update && sudo apt-get install -y lftp
-
-    - name: Deploy and verify live marker
-      run: |
-        set -euo pipefail
-        TARGETS="/www/ /public_html/www/ ./www/"
-        URLS="https://iceflowraza.com/www/deploy-test.txt https://iceflowraza.com/deploy-test.txt"
-        MARKER="gha-${GITHUB_SHA:0:7}-$(date +%s)"
-        VERIFIED=0
-
-        echo "DEPLOY_TEST_MARKER=$MARKER" > deploy-test.txt
-        echo "Generated marker: $MARKER"
-
-        for TARGET in $TARGETS; do
-          echo "Deploy attempt target: $TARGET"
-          lftp -e "set ssl:verify-certificate no; set ftp:passive-mode true; open -u $FTP_USERNAME,$FTP_PASSWORD $FTP_SERVER; mirror -R --verbose --exclude-glob .git* --exclude-glob .github --exclude-glob run-logs* ./ $TARGET; bye" || true
-
-          for URL in $URLS; do
-            echo "Checking URL: $URL"
-            if curl -fsSL "$URL?ts=$(date +%s)" | grep -q "DEPLOY_TEST_MARKER=$MARKER"; then
-              echo "Marker matched on URL: $URL"
-              echo "Remote target likely active: $TARGET" >> "$GITHUB_STEP_SUMMARY"
-              echo "Live URL showing updates: $URL" >> "$GITHUB_STEP_SUMMARY"
-              VERIFIED=1
-              break
-            fi
-          done
-
-          if [ "$VERIFIED" -eq 1 ]; then
-            break
-          fi
-        done
-
-        if [ "$VERIFIED" -ne 1 ]; then
-          echo "Marker not visible on tested live URLs."
-          echo "Likely FTP secrets are pointing to another Hostinger account/server."
-          exit 1
-        fi
+    - name: Sync files to Hostinger FTP root
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        port: 21
+        timeout: 120000
+        # IMPORTANT: Many Hostinger FTP users are already jailed inside /public_html/www.
+        # Use root (/) to avoid accidental nested folders like /public_html/www/public_html/www.
+        server-dir: /
+        dangerous-clean-slate: true
+        exclude: |
+          **/.git*
+          **/.github/**
+          **/run-logs/**
