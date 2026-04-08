@@ -17,6 +17,11 @@ async function postJson(url, payload) {
   };
 }
 
+function appUrl(path) {
+  const base = (window.APP_BASE || '').replace(/\/$/, '');
+  return base + path;
+}
+
 function show(data, typeHint) {
   const messageBox = document.getElementById('authMessage');
   if (messageBox) {
@@ -123,7 +128,7 @@ function setupPasswordToggles() {
 }
 
 async function searchCustomersByName(term) {
-  const res = await fetch('../api/orders/search_customers.php?q=' + encodeURIComponent(term));
+  const res = await fetch(appUrl('/api/orders/search_customers.php?q=' + encodeURIComponent(term)));
   return res.json();
 }
 
@@ -160,7 +165,7 @@ if (loginForm) {
     clearMessage();
     const form = new FormData(e.target);
     try {
-      const data = await postJson('../api/auth/login.php', {
+      const data = await postJson(appUrl('/api/auth/login.php'), {
         username: form.get('username'),
         password: form.get('password')
       });
@@ -181,12 +186,20 @@ if (signupForm) {
     e.preventDefault();
     clearMessage();
     const form = new FormData(e.target);
+    const password = (form.get('password') || '').toString();
+    const confirmPassword = (form.get('confirm_password') || '').toString();
+
+    if (password !== confirmPassword) {
+      show({ ok: false, message: 'Password and Confirm Password must match.' });
+      return;
+    }
+
     try {
-      const data = await postJson('../api/auth/signup.php', {
+      const data = await postJson(appUrl('/api/auth/signup.php'), {
         username: form.get('username'),
         phone: form.get('phone'),
         email: form.get('email'),
-        password: form.get('password')
+        password
       });
       show(data);
 
@@ -211,7 +224,7 @@ if (forgotForm) {
     clearMessage();
     const form = new FormData(e.target);
     try {
-      const data = await postJson('../api/auth/forgot_password.php', {
+      const data = await postJson(appUrl('/api/auth/forgot_password.php'), {
         username: form.get('username'),
         new_password: form.get('new_password')
       });
@@ -257,7 +270,7 @@ if (orderForm) {
       return;
     }
 
-    const data = await postJson('../api/orders/create.php', {
+    const data = await postJson(appUrl('/api/orders/create.php'), {
       customer_party_id: customerId,
       delivery_date: form.get('delivery_date').replace('T', ' ') + ':00',
       estimate_amount: Number(form.get('estimate_amount')),
@@ -272,7 +285,7 @@ if (completeForm) {
   completeForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = new FormData(e.target);
-    const data = await postJson('../api/orders/complete.php', {
+    const data = await postJson(appUrl('/api/orders/complete.php'), {
       order_id: Number(form.get('order_id')),
       final_bill_amount: Number(form.get('final_bill_amount'))
     });
@@ -285,7 +298,7 @@ if (stockForm) {
   stockForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const form = new FormData(e.target);
-    const data = await postJson('../api/inventory/movement.php', {
+    const data = await postJson(appUrl('/api/inventory/movement.php'), {
       item_id: Number(form.get('item_id')),
       movement_type: form.get('movement_type'),
       quantity: Number(form.get('quantity')),

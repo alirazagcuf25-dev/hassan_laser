@@ -1,6 +1,15 @@
 <?php
 require_once __DIR__ . '/../app/bootstrap.php';
 $user = current_user();
+
+$scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/'));
+$scriptDir = rtrim($scriptDir, '/');
+$appBase = $scriptDir;
+if (substr($appBase, -7) === '/public') {
+  $appBase = substr($appBase, 0, -7);
+}
+
+$assetBase = ($appBase !== '' ? $appBase : '') . '/public/assets';
 ?>
 <!doctype html>
 <html lang="en">
@@ -8,7 +17,7 @@ $user = current_user();
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hassan Trade Panel</title>
-  <link rel="stylesheet" href="/public/assets/css/style.css">
+  <link rel="stylesheet" href="<?php echo htmlspecialchars($assetBase . '/css/style.css'); ?>">
 </head>
 <body class="<?php echo $user ? 'logged-in' : 'logged-out'; ?>">
   <?php if (!$user): ?>
@@ -45,6 +54,10 @@ $user = current_user();
             <div class="password-wrap">
               <input type="password" name="password" placeholder="Password" required>
               <button type="button" class="password-toggle" data-target="password" aria-label="Show password" title="Show password">&#128065;</button>
+            </div>
+            <div class="password-wrap">
+              <input type="password" name="confirm_password" placeholder="Confirm Password" required>
+              <button type="button" class="password-toggle" data-target="confirm_password" aria-label="Show password" title="Show password">&#128065;</button>
             </div>
             <button type="submit" class="primary-btn">Create Account</button>
           </form>
@@ -131,7 +144,8 @@ $user = current_user();
 
   <script>
     window.CURRENT_USER = <?php echo json_encode($user ?: null, JSON_UNESCAPED_UNICODE); ?>;
+    window.APP_BASE = <?php echo json_encode($appBase, JSON_UNESCAPED_UNICODE); ?>;
   </script>
-  <script src="/public/assets/js/app.js"></script>
+  <script src="<?php echo htmlspecialchars($assetBase . '/js/app.js'); ?>"></script>
 </body>
 </html>
