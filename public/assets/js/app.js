@@ -144,7 +144,8 @@ function renderCustomerResults(rows) {
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'search-item';
-    btn.textContent = row.party_name + ' (' + (row.phone || 'no-phone') + ')';
+    const phoneText = row.phone ? ' (' + row.phone + ')' : '';
+    btn.textContent = row.party_name + phoneText;
     btn.addEventListener('click', () => {
       document.getElementById('customerSearch').value = row.party_name;
       document.getElementById('customerPartyId').value = row.id;
@@ -252,8 +253,17 @@ if (customerSearch) {
         return;
       }
 
-      const data = await searchCustomersByName(term);
-      renderCustomerResults(data.rows || []);
+      try {
+        const data = await searchCustomersByName(term);
+        if (!data || !data.ok || !Array.isArray(data.rows)) {
+          renderCustomerResults([]);
+          return;
+        }
+
+        renderCustomerResults(data.rows);
+      } catch (err) {
+        renderCustomerResults([]);
+      }
     }, 250);
   });
 }

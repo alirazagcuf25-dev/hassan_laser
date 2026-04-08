@@ -25,6 +25,16 @@ if ($phone === '') {
 $email = !empty($input['email']) ? trim((string)$input['email']) : null;
 
 $pdo = db();
+$userColumns = [];
+foreach ($pdo->query('SHOW COLUMNS FROM users') as $col) {
+    $userColumns[(string)$col['Field']] = true;
+}
+
+$partyColumns = [];
+foreach ($pdo->query('SHOW COLUMNS FROM parties') as $col) {
+    $partyColumns[(string)$col['Field']] = true;
+}
+
 $exists = $pdo->prepare('SELECT id FROM users WHERE full_name = ? LIMIT 1');
 $exists->execute([$username]);
 if ($exists->fetch()) {
@@ -37,7 +47,7 @@ if ($phoneExists->fetch()) {
     json_response(['ok' => false, 'message' => 'Phone already exists'], 409);
 }
 
-if ($email !== null) {
+if ($email !== null && isset($userColumns['email'])) {
     $emailExists = $pdo->prepare('SELECT id FROM users WHERE email = ? LIMIT 1');
     $emailExists->execute([$email]);
     if ($emailExists->fetch()) {
@@ -50,19 +60,77 @@ $hash = password_hash((string)$input['password'], PASSWORD_BCRYPT);
 try {
     $pdo->beginTransaction();
 
-    $stmt = $pdo->prepare('INSERT INTO users(role, full_name, phone, email, password_hash, is_active) VALUES("customer", ?, ?, ?, ?, 1)');
-    $stmt->execute([$username, $phone, $email, $hash]);
+    $userFields = ['role', 'full_name', 'phone', 'password_hash'];
+    $userValues = ['customer', $username, $phone, $hash];
+
+    if (isset($userColumns['email'])) {
+        $userFields[] = 'email';
+        $userValues[] = $email;
+    }
+
+    if (isset($userColumns['is_active'])) {
+        $userFields[] = 'is_active';
+        $userValues[] = 1;
+    }
+
+    $userSql = 'INSERT INTO users(' . implode(', ', $userFields) . ') VALUES(' . implode(', ', array_fill(0, count($userFields), '?')) . ')';
+    $stmt = $pdo->prepare($userSql);
+    $stmt->execute($userValues);
 
     $userId = (int)$pdo->lastInsertId();
-    $tmpCode = 'CID-TMP-' . $userId;
 
-    $party = $pdo->prepare('INSERT INTO parties(party_type, party_code, party_name, phone, linked_user_id, opening_balance, opening_balance_type) VALUES("customer", ?, ?, ?, ?, 0, "dr")');
-    $party->execute([$tmpCode, $username, $phone, $userId]);
+    $partyFields = [];
+    $partyValues = [];
 
-    $partyId = (int)$pdo->lastInsertId();
-    $finalCode = sprintf('CID-%04d', $partyId);
-    $partyUpdate = $pdo->prepare('UPDATE parties SET party_code = ? WHERE id = ?');
-    $partyUpdate->execute([$finalCode, $partyId]);
+    if (isset($partyColumns['party_type'])) {
+        $partyFields[] = 'party_type';
+        $partyValues[] = 'customer';
+    }
+
+    if (isset($partyColumns['party_name'])) {
+        $partyFields[] = 'party_name';
+        $partyValues[] = $username;
+    }
+
+    if (isset($partyColumns['phone'])) {
+        $partyFields[] = 'phone';
+        $partyValues[] = $phone;
+    }
+
+    if (isset($partyColumns['linked_user_id'])) {
+        $partyFields[] = 'linked_user_id';
+        $partyValues[] = $userId;
+    }
+
+    if (isset($partyColumns['opening_balance'])) {
+        $partyFields[] = 'opening_balance';
+        $partyValues[] = 0;
+    }
+
+    if (isset($partyColumns['opening_balance_type'])) {
+        $partyFields[] = 'opening_balance_type';
+        $partyValues[] = 'dr';
+    }
+
+    $tmpCode = null;
+    if (isset($partyColumns['party_code'])) {
+        $tmpCode = 'CID-TMP-' . $userId;
+        $partyFields[] = 'party_code';
+        $partyValues[] = $tmpCode;
+    }
+
+    if (count($partyFields) >= 2) {
+        $partySql = 'INSERT INTO parties(' . implode(', ', $partyFields) . ') VALUES(' . implode(', ', array_fill(0, count($partyFields), '?')) . ')';
+        $party = $pdo->prepare($partySql);
+        $party->execute($partyValues);
+
+        if ($tmpCode !== null) {
+            $partyId = (int)$pdo->lastInsertId();
+            $finalCode = sprintf('CID-%04d', $partyId);
+            $partyUpdate = $pdo->prepare('UPDATE parties SET party_code = ? WHERE id = ?');
+            $partyUpdate->execute([$finalCode, $partyId]);
+        }
+    }
 
     $pdo->commit();
 } catch (Throwable $e) {
