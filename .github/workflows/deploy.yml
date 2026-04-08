@@ -9,39 +9,22 @@ jobs:
   web-deploy:
     name: Deploy
     runs-on: ubuntu-latest
-    env:
-      FTP_HOST: ${{ secrets.FTP_SERVER }}
-      FTP_USER: ${{ secrets.FTP_USERNAME }}
-      FTP_PASS: ${{ secrets.FTP_PASSWORD }}
     steps:
     - name: Get latest code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
-    - name: Install lftp
-      run: sudo apt-get update && sudo apt-get install -y lftp
-
-    - name: Sync files with lftp mirror
-      run: |
-        lftp -c "
-          set ssl:verify-certificate no;
-          set ftp:passive-mode true;
-          set net:timeout 30;
-          set net:max-retries 2;
-          set net:reconnect-interval-base 5;
-          open -u $FTP_USER,$FTP_PASS $FTP_HOST;
-          rm -f /public_html/www/config;
-          rm -f /public_html/www/api;
-          rm -f /public_html/www/app;
-          rm -f /public_html/www/public;
-          mirror -R --verbose --delete \
-            --exclude-glob .git* \
-            --exclude-glob .github \
-            --exclude-glob node_modules \
-            --exclude-glob vendor \
-            --exclude-glob logs \
-            --exclude-glob cache \
-            --exclude-glob storage \
-            --exclude-glob tmp \
-            ./ /public_html/www/;
-          bye
-        "
+    - name: Sync files
+      uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        server-dir: /public_html/www/
+        timeout: 900000
+        passive: true
+        exclude: |
+          **/.git*
+          **/.github/**
+          **/node_modules/**
+          **/vendor/**
+          **/run-logs/**
