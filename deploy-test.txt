@@ -1,0 +1,2 @@
+DEPLOY_TEST_MARKER=2026-04-08-verify-01
+If you can read this file on live URL, deployment is updating /www correctly.
