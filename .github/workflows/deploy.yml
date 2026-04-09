@@ -22,7 +22,7 @@ jobs:
         protocol: ftps
         port: 21
         security: loose
-        server-dir: ./public_html/www/
+        server-dir: ./public_html/
         state-name: .ftp-deploy-sync-state-www-v2.json
         timeout: 900000
         log-level: verbose
