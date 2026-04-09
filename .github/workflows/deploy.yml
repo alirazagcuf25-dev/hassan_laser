@@ -13,6 +13,14 @@ jobs:
     - name: Get latest code
       uses: actions/checkout@v4
 
+    - name: Ensure remote www directory exists
+      run: |
+        curl -v --ssl-reqd --insecure \
+          --ftp-create-dirs \
+          -u "${{ secrets.FTP_USERNAME }}:${{ secrets.FTP_PASSWORD }}" \
+          "ftp://${{ secrets.FTP_SERVER }}/public_html/www/.keep" \
+          -T /dev/null || true
+
     - name: Sync files
       uses: SamKirkland/FTP-Deploy-Action@v4.3.4
       with:
