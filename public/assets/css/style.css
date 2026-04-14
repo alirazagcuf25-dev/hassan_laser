@@ -378,3 +378,146 @@ pre {
     font-size: 28px;
   }
 }
+
+/* ── Ledger Report ─────────────────────────────────────────────── */
+.ledger-type-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.ledger-type-btn {
+  width: auto;
+  padding: 7px 16px;
+  border-radius: 999px;
+  border: 1px solid #cdd9d5;
+  background: #edf3f1;
+  color: #21413a;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.ledger-type-btn.active {
+  background: linear-gradient(135deg, var(--accent), #056f64);
+  color: #fff;
+  border-color: transparent;
+}
+
+.ledger-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.ledger-controls select {
+  flex: 1;
+  min-width: 0;
+}
+
+.ledger-controls button {
+  width: auto;
+  white-space: nowrap;
+  padding: 10px 18px;
+}
+
+.ledger-party-info {
+  margin-bottom: 10px;
+  font-size: 15px;
+  color: #1a3a33;
+}
+
+.ledger-code {
+  font-size: 12px;
+  background: #e4f0ec;
+  color: #0c5e4e;
+  border-radius: 4px;
+  padding: 1px 6px;
+}
+
+.ledger-empty,
+.ledger-error,
+.ledger-loading {
+  color: #666;
+  font-size: 14px;
+  margin: 8px 0;
+}
+
+.ledger-error {
+  color: #8e1f1f;
+}
+
+.ledger-table-wrap {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #dde8e5;
+}
+
+.ledger-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.ledger-table thead th {
+  background: #eef4f2;
+  color: #1a3a33;
+  padding: 9px 10px;
+  text-align: left;
+  border-bottom: 2px solid #cde0da;
+  white-space: nowrap;
+}
+
+.ledger-table tbody tr:nth-child(even) {
+  background: #f8fcfb;
+}
+
+.ledger-table tbody tr:hover {
+  background: #edf5f2;
+}
+
+.ledger-table td {
+  padding: 7px 10px;
+  border-bottom: 1px solid #e8efec;
+  vertical-align: top;
+}
+
+.ledger-table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.ledger-table .bal {
+  font-weight: 600;
+  color: #0c5e4e;
+}
+
+.ledger-summary {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  padding: 10px 14px;
+  background: #eef4f2;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #1a3a33;
+}
+
+@media (max-width: 600px) {
+  .ledger-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ledger-controls button {
+    width: 100%;
+  }
+
+  .ledger-summary {
+    gap: 10px;
+    flex-direction: column;
+  }
+}

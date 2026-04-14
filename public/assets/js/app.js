@@ -318,3 +318,121 @@ if (stockForm) {
     show(data);
   });
 }
+
+// ── Ledger Report ────────────────────────────────────────────────
+let currentLedgerType = 'customer';
+
+async function loadLedgerParties(type) {
+  const select = document.getElementById('ledgerPartySelect');
+  if (!select) return;
+  select.innerHTML = '<option value="">Loading…</option>';
+  try {
+    const res = await fetch(appUrl('/api/reports/parties.php?type=' + encodeURIComponent(type)));
+    const data = await res.json();
+    select.innerHTML = '<option value="">-- Select Party --</option>';
+    if (data.ok && Array.isArray(data.rows)) {
+      data.rows.forEach((row) => {
+        const opt = document.createElement('option');
+        opt.value = row.id;
+        opt.textContent = row.party_name + (row.phone ? ' (' + row.phone + ')' : '');
+        select.appendChild(opt);
+      });
+    }
+  } catch (_) {
+    select.innerHTML = '<option value="">-- Failed to load --</option>';
+  }
+}
+
+function formatNum(n) {
+  return Number(n).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function renderLedger(data) {
+  const box = document.getElementById('ledgerResult');
+  if (!box) return;
+
+  if (!data.ok) {
+    box.innerHTML = '<p class="ledger-error">' + (data.message || 'Error loading ledger') + '</p>';
+    return;
+  }
+
+  const party = data.party || {};
+  const rows = data.rows || [];
+
+  let html = '<div class="ledger-party-info">'
+    + '<strong>' + party.party_name + '</strong>'
+    + (party.party_code ? ' <span class="ledger-code">' + party.party_code + '</span>' : '')
+    + ' &mdash; <em>' + (party.party_type || '') + '</em>'
+    + (party.phone ? ' &nbsp;📞 ' + party.phone : '')
+    + '</div>';
+
+  if (!rows.length) {
+    html += '<p class="ledger-empty">No transactions found.</p>';
+    box.innerHTML = html;
+    return;
+  }
+
+  html += '<div class="ledger-table-wrap"><table class="ledger-table">'
+    + '<thead><tr><th>#</th><th>Date</th><th>Description</th><th>Debit</th><th>Credit</th><th>Balance</th></tr></thead>'
+    + '<tbody>';
+
+  rows.forEach((row, i) => {
+    const bal = row.balance >= 0 ? formatNum(row.balance) + ' Dr' : formatNum(Math.abs(row.balance)) + ' Cr';
+    html += '<tr>'
+      + '<td>' + (i + 1) + '</td>'
+      + '<td>' + (row.tx_date || '').slice(0, 16) + '</td>'
+      + '<td>' + (row.description || '') + '</td>'
+      + '<td class="num">' + (row.debit > 0 ? formatNum(row.debit) : '') + '</td>'
+      + '<td class="num">' + (row.credit > 0 ? formatNum(row.credit) : '') + '</td>'
+      + '<td class="num bal">' + bal + '</td>'
+      + '</tr>';
+  });
+
+  html += '</tbody></table></div>';
+
+  html += '<div class="ledger-summary">'
+    + '<span>Total Debit: <strong>' + formatNum(data.total_debit) + '</strong></span>'
+    + '<span>Total Credit: <strong>' + formatNum(data.total_credit) + '</strong></span>'
+    + '<span>Net Balance: <strong>' + (data.balance >= 0 ? formatNum(data.balance) + ' Dr' : formatNum(Math.abs(data.balance)) + ' Cr') + '</strong></span>'
+    + '</div>';
+
+  box.innerHTML = html;
+}
+
+const ledgerTypeBtns = document.querySelectorAll('.ledger-type-btn');
+if (ledgerTypeBtns.length) {
+  ledgerTypeBtns.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      ledgerTypeBtns.forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentLedgerType = btn.getAttribute('data-type');
+      const box = document.getElementById('ledgerResult');
+      if (box) box.innerHTML = '';
+      loadLedgerParties(currentLedgerType);
+    });
+  });
+
+  loadLedgerParties(currentLedgerType);
+}
+
+const ledgerLoadBtn = document.getElementById('ledgerLoadBtn');
+if (ledgerLoadBtn) {
+  ledgerLoadBtn.addEventListener('click', async () => {
+    const select = document.getElementById('ledgerPartySelect');
+    const partyId = select ? select.value : '';
+    if (!partyId) {
+      const box = document.getElementById('ledgerResult');
+      if (box) box.innerHTML = '<p class="ledger-error">Please select a party first.</p>';
+      return;
+    }
+    const box = document.getElementById('ledgerResult');
+    if (box) box.innerHTML = '<p class="ledger-loading">Loading…</p>';
+    try {
+      const res = await fetch(appUrl('/api/reports/ledger.php?party_id=' + encodeURIComponent(partyId)));
+      const data = await res.json();
+      renderLedger(data);
+    } catch (_) {
+      if (box) box.innerHTML = '<p class="ledger-error">Failed to load ledger.</p>';
+    }
+  });
+}

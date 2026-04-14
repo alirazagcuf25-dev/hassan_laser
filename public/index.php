@@ -138,6 +138,23 @@ $assetBase = ($appBase !== '' ? $appBase : '') . '/public/assets';
           </form>
         </div>
       </section>
+
+      <section class="card" id="ledgerReportSection">
+        <h2>Ledger Report</h2>
+        <div class="ledger-type-tabs">
+          <button type="button" class="ledger-type-btn active" data-type="customer">Customer</button>
+          <button type="button" class="ledger-type-btn" data-type="supplier">Supplier</button>
+          <button type="button" class="ledger-type-btn" data-type="employee">Employee</button>
+          <button type="button" class="ledger-type-btn" data-type="owner">Owner</button>
+        </div>
+        <div class="ledger-controls">
+          <select id="ledgerPartySelect">
+            <option value="">-- Select Party --</option>
+          </select>
+          <button type="button" id="ledgerLoadBtn">View Ledger</button>
+        </div>
+        <div id="ledgerResult"></div>
+      </section>
     </section>
   </main>
   <?php endif; ?>
