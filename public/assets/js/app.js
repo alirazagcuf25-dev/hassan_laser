@@ -347,6 +347,10 @@ function formatNum(n) {
   return Number(n).toLocaleString('en-PK', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function formatBalance(n) {
+  return n >= 0 ? formatNum(n) + ' Dr' : formatNum(Math.abs(n)) + ' Cr';
+}
+
 function renderLedger(data) {
   const box = document.getElementById('ledgerResult');
   if (!box) return;
@@ -363,7 +367,7 @@ function renderLedger(data) {
     + '<strong>' + party.party_name + '</strong>'
     + (party.party_code ? ' <span class="ledger-code">' + party.party_code + '</span>' : '')
     + ' &mdash; <em>' + (party.party_type || '') + '</em>'
-    + (party.phone ? ' &nbsp;📞 ' + party.phone : '')
+    + (party.phone ? ' &nbsp;Tel: ' + party.phone : '')
     + '</div>';
 
   if (!rows.length) {
@@ -377,14 +381,13 @@ function renderLedger(data) {
     + '<tbody>';
 
   rows.forEach((row, i) => {
-    const bal = row.balance >= 0 ? formatNum(row.balance) + ' Dr' : formatNum(Math.abs(row.balance)) + ' Cr';
     html += '<tr>'
       + '<td>' + (i + 1) + '</td>'
       + '<td>' + (row.tx_date || '').slice(0, 16) + '</td>'
       + '<td>' + (row.description || '') + '</td>'
       + '<td class="num">' + (row.debit > 0 ? formatNum(row.debit) : '') + '</td>'
       + '<td class="num">' + (row.credit > 0 ? formatNum(row.credit) : '') + '</td>'
-      + '<td class="num bal">' + bal + '</td>'
+      + '<td class="num bal">' + formatBalance(row.balance) + '</td>'
       + '</tr>';
   });
 
@@ -393,7 +396,7 @@ function renderLedger(data) {
   html += '<div class="ledger-summary">'
     + '<span>Total Debit: <strong>' + formatNum(data.total_debit) + '</strong></span>'
     + '<span>Total Credit: <strong>' + formatNum(data.total_credit) + '</strong></span>'
-    + '<span>Net Balance: <strong>' + (data.balance >= 0 ? formatNum(data.balance) + ' Dr' : formatNum(Math.abs(data.balance)) + ' Cr') + '</strong></span>'
+    + '<span>Net Balance: <strong>' + formatBalance(data.balance) + '</strong></span>'
     + '</div>';
 
   box.innerHTML = html;
